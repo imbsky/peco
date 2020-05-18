@@ -36,10 +36,6 @@ $(INTERNAL_BIN_DIR):
 	@echo "Creating $(INTERNAL_BIN_DIR)"
 	@mkdir -p $(INTERNAL_BIN_DIR)
 
-deps: 
-	@echo "Downloading dependencies..."
-	@GO111MODULE=on go mod download
-
 build-windows-amd64:
 	@$(MAKE) build GOOS=windows GOARCH=amd64 SUFFIX=.exe
 
@@ -64,7 +60,7 @@ build-darwin-amd64:
 build-darwin-386:
 	@$(MAKE) build GOOS=darwin GOARCH=386
 
-$(RELEASE_DIR)/peco_$(GOOS)_$(GOARCH)/peco$(SUFFIX): deps
+$(RELEASE_DIR)/peco_$(GOOS)_$(GOARCH)/peco$(SUFFIX):
 	@GO111MODULE=on go build -o $(RELEASE_DIR)/peco_$(GOOS)_$(GOARCH)/peco$(SUFFIX) cmd/peco/peco.go
 
 all: $(BUILD_TARGETS)
@@ -126,10 +122,14 @@ release-github-token: github_token
 release-upload: release release-github-token
 	ghr -u $(GITHUB_USERNAME) -t $(shell cat github_token) --draft --replace $(VERSION) $(ARTIFACTS_DIR)
 
-test: deps
+test:
 	@echo "Running tests..."
 	@GO111MODULE=on PATH=$(INTERNAL_BIN_DIR)/$(GOOS)/$(GOARCH):$(PATH) go test -v ./...
 
 clean:
 	-rm -rf $(RELEASE_DIR)/*/*
 	-rm -rf $(ARTIFACTS_DIR)/*
+
+lint:
+	golangci-lint run ./...
+
